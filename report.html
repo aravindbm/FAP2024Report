@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive FAP Student Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* PDF Print Styles */
+        @media print {
+            body { background-color: white; font-size: 11px; }
+            .no-print { display: none !important; }
+            .print-container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+            th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 11px; }
+            th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            h2 { font-size: 14px; margin-top: 15px; margin-bottom: 5px; color: #000 !important; }
+            /* Prevent tables from breaking across pages */
+            .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+            .page-break-before { page-break-before: always; }
+        }
+        /* Web View Styles */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        th, td { border: 1px solid #d1d5db; padding: 0.5rem; text-align: center; }
+        th { background-color: #f3f4f6; font-weight: 600; }
+        .section-title { font-weight: bold; font-size: 1.125rem; color: #3730a3; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+    </style>
+</head>
+<body class="bg-gray-200 p-4 font-sans text-gray-800">
+
+    <div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md mb-6 no-print">
+        <h1 class="text-2xl font-bold text-indigo-700 mb-4">Generate Comprehensive Student PDF Report</h1>
+        <div class="flex gap-4 items-end">
+            <div class="flex-1">
+                <label class="block text-sm font-medium mb-1">Enter Student Roll Number</label>
+                <input type="text" id="searchInput" class="w-full border border-gray-300 p-2 rounded" placeholder="e.g., 2024-001">
+            </div>
+            <button onclick="generateReport()" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700">Fetch Data</button>
+            <button onclick="window.print()" id="printBtn" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 hidden">Save as PDF</button>
+        </div>
+        <p id="statusMsg" class="text-red-500 mt-2 text-sm hidden">Student not found or error loading data.</p>
+    </div>
+
+    <div id="reportContainer" class="max-w-5xl mx-auto bg-white p-10 rounded-lg shadow-xl print-container hidden">
+        
+        <div class="text-center border-b-2 border-gray-800 pb-4 mb-6">
+            <h1 class="text-2xl font-bold uppercase">Family Adoption Programme (FAP)</h1>
+            <h2 class="text-lg font-semibold">Comprehensive Field Report</h2>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-sm bg-gray-50 p-4 rounded avoid-break">
+            <div><strong>Student Name:</strong> <span id="r_name"></span></div>
+            <div><strong>Roll Number:</strong> <span id="r_roll"></span></div>
+            <div><strong>Allotted Area:</strong> <span id="r_area"></span></div>
+            <div><strong>Report Date:</strong> <span id="r_date"></span></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 avoid-break">
+            <div>
+                <h2 class="section-title">Table 1: Details of FAP Survey</h2>
+                <table>
+                    <tr><th class="text-left">Variable</th><th>Value</th></tr>
+                    <tr><td class="text-left">Total number of Households adopted</td><td id="t1_hh">0</td></tr>
+                    <tr><td class="text-left">Total Population adopted</td><td id="t1_pop">0</td></tr>
+                </table>
+            </div>
+            <div>
+                <h2 class="section-title">Table 2: Type of Family</h2>
+                <table>
+                    <tr><th class="text-left">Type</th><th>Count</th></tr>
+                    <tr><td class="text-left">Nuclear</td><td id="t2_nuc">0</td></tr>
+                    <tr><td class="text-left">Joint</td><td id="t2_jnt">0</td></tr>
+                    <tr><td class="text-left">Three generation</td><td id="t2_thr">0</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 avoid-break">
+            <div>
+                <h2 class="section-title">Table 3: Socioeconomic Status</h2>
+                <table>
+                    <tr><th class="text-left">Status</th><th>Count</th></tr>
+                    <tr><td class="text-left">Upper class</td><td id="t3_uc">0</td></tr>
+                    <tr><td class="text-left">Upper middle class</td><td id="t3_umc">0</td></tr>
+                    <tr><td class="text-left">Middle class</td><td id="t3_mc">0</td></tr>
+                    <tr><td class="text-left">Lower middle class</td><td id="t3_lmc">0</td></tr>
+                    <tr><td class="text-left">Lower class</td><td id="t3_lc">0</td></tr>
+                </table>
+            </div>
+            <div>
+                <h2 class="section-title">Table 5: NCD Screening Summary</h2>
+                <table>
+                    <tr><th class="text-left">NCD Screening findings</th><th>Count</th></tr>
+                    <tr><td class="text-left">Total Screened for Hypertension</td><td id="t5_htn_scr">0</td></tr>
+                    <tr><td class="text-left">Raised Blood Pressure identified</td><td id="t5_htn_rsd">0</td></tr>
+                    <tr><td class="text-left">Known Hypertensives identified</td><td id="t5_htn_kno">0</td></tr>
+                    <tr><td class="text-left">Total Screened for Random Blood Sugar</td><td id="t5_rbs_scr">0</td></tr>
+                    <tr><td class="text-left">Deranged random Blood Sugar identified</td><td id="t5_rbs_rsd">0</td></tr>
+                    <tr><td class="text-left">Known Diabetics identified</td><td id="t5_rbs_kno">0</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="avoid-break">
+            <h2 class="section-title">Table 4: Age and Gender-wise Distribution</h2>
+            <table>
+                <tr><th>Age Group</th><th>Male</th><th>Female</th><th>Total</th></tr>
+                <tr><td>< 1 year</td><td id="t4_m1">0</td><td id="t4_f1">0</td><td id="t4_tot1" class="font-bold">0</td></tr>
+                <tr><td>1 - 5 years</td><td id="t4_m2">0</td><td id="t4_f2">0</td><td id="t4_tot2" class="font-bold">0</td></tr>
+                <tr><td>6 - 14 years</td><td id="t4_m3">0</td><td id="t4_f3">0</td><td id="t4_tot3" class="font-bold">0</td></tr>
+                <tr><td>15 - 45 years</td><td id="t4_m4">0</td><td id="t4_f4">0</td><td id="t4_tot4" class="font-bold">0</td></tr>
+                <tr><td>46 - 60 years</td><td id="t4_m5">0</td><td id="t4_f5">0</td><td id="t4_tot5" class="font-bold">0</td></tr>
+                <tr><td>> 60 years</td><td id="t4_m6">0</td><td id="t4_f6">0</td><td id="t4_tot6" class="font-bold">0</td></tr>
+                <tr class="font-bold bg-gray-100"><td>Grand Total</td><td id="t4_m_all">0</td><td id="t4_f_all">0</td><td id="t4_all">0</td></tr>
+            </table>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 page-break-before avoid-break mt-6">
+            <div>
+                <h2 class="section-title">Table 6: Malnutrition Status (Under-5)</h2>
+                <table>
+                    <tr><th class="text-left">Indicator</th><th>Present</th><th>% of U5 Pop</th></tr>
+                    <tr><td class="text-left">Stunted (Height-for-Age)</td><td id="t6_v1">0</td><td id="t6_p1">0%</td></tr>
+                    <tr><td class="text-left">Wasted (Weight-for-Height)</td><td id="t6_v2">0</td><td id="t6_p2">0%</td></tr>
+                    <tr><td class="text-left">Severely Wasted</td><td id="t6_v3">0</td><td id="t6_p3">0%</td></tr>
+                    <tr><td class="text-left">Underweight (Weight-for-Age)</td><td id="t6_v4">0</td><td id="t6_p4">0%</td></tr>
+                    <tr><td class="text-left">Overweight</td><td id="t6_v5">0</td><td id="t6_p5">0%</td></tr>
+                </table>
+            </div>
+
+            <div>
+                <h2 class="section-title">Table 7: Anthropometric Details (>15 years)</h2>
+                <table>
+                    <tr><th class="text-left">Anthropometric Grading</th><th>Present</th><th>% of Adult Pop</th></tr>
+                    <tr><td class="text-left">Female: BMI < 18.5</td><td id="t7_v1">0</td><td id="t7_p1">0%</td></tr>
+                    <tr><td class="text-left">Male: BMI < 18.5</td><td id="t7_v2">0</td><td id="t7_p2">0%</td></tr>
+                    <tr><td class="text-left">Female: BMI ≥ 25.0</td><td id="t7_v3">0</td><td id="t7_p3">0%</td></tr>
+                    <tr><td class="text-left">Male: BMI ≥ 25.0</td><td id="t7_v4">0</td><td id="t7_p4">0%</td></tr>
+                    <tr><td class="text-left">Female: WHR ≥ 0.85</td><td id="t7_v5">0</td><td id="t7_p5">0%</td></tr>
+                    <tr><td class="text-left">Male: WHR ≥ 0.90</td><td id="t7_v6">0</td><td id="t7_p6">0%</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 avoid-break">
+            <div>
+                <h2 class="section-title">Table 8: Distribution of Anemia</h2>
+                <table>
+                    <tr><th class="text-left">Hb% levels among groups</th><th>Present</th><th>% of Pop</th></tr>
+                    <tr><td class="text-left">6-59 months: Hb% < 11.0</td><td id="t8_v1">0</td><td id="t8_p1">0%</td></tr>
+                    <tr><td class="text-left">15-49y Non-pregnant: Hb < 12.0</td><td id="t8_v2">0</td><td id="t8_p2">0%</td></tr>
+                    <tr><td class="text-left">15-49y Pregnant: Hb < 11.0</td><td id="t8_v3">0</td><td id="t8_p3">0%</td></tr>
+                    <tr><td class="text-left">15-49y Women (Total Anemic)</td><td id="t8_v4">0</td><td id="t8_p4">0%</td></tr>
+                    <tr><td class="text-left">15-49y Men: Hb% < 13.0</td><td id="t8_v5">0</td><td id="t8_p5">0%</td></tr>
+                </table>
+            </div>
+            
+            <div>
+                <h2 class="section-title">Table 9: Raised Random Blood Sugar</h2>
+                <table>
+                    <tr><th class="text-left">RBS Grading</th><th>Present</th><th>% Screened</th></tr>
+                    <tr><td class="text-left">Female: 141-160 (High)</td><td id="t9_v1">0</td><td id="t9_p1">0%</td></tr>
+                    <tr><td class="text-left">Female: >160 (Very High)</td><td id="t9_v2">0</td><td id="t9_p2">0%</td></tr>
+                    <tr><td class="text-left">Female: On Medication</td><td id="t9_v3">0</td><td id="t9_p3">0%</td></tr>
+                    <tr><td class="text-left">Male: 141-160 (High)</td><td id="t9_v4">0</td><td id="t9_p4">0%</td></tr>
+                    <tr><td class="text-left">Male: >160 (Very High)</td><td id="t9_v5">0</td><td id="t9_p5">0%</td></tr>
+                    <tr><td class="text-left">Male: On Medication</td><td id="t9_v6">0</td><td id="t9_p6">0%</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="avoid-break mb-8">
+            <h2 class="section-title">Table 10: Raised Blood Pressure</h2>
+            <table>
+                <tr><th class="text-left">Blood Pressure Grading</th><th>Present</th><th>% Screened</th></tr>
+                <tr><td class="text-left">Female: Mild (SBP 140-159 / DBP 90-99)</td><td id="t10_v1">0</td><td id="t10_p1">0%</td></tr>
+                <tr><td class="text-left">Female: Mod/Severe (SBP >160 / DBP >100)</td><td id="t10_v2">0</td><td id="t10_p2">0%</td></tr>
+                <tr><td class="text-left">Female: On Medication</td><td id="t10_v3">0</td><td id="t10_p3">0%</td></tr>
+                <tr><td class="text-left">Male: Mild (SBP 140-159 / DBP 90-99)</td><td id="t10_v4">0</td><td id="t10_p4">0%</td></tr>
+                <tr><td class="text-left">Male: Mod/Severe (SBP >160 / DBP >100)</td><td id="t10_v5">0</td><td id="t10_p5">0%</td></tr>
+                <tr><td class="text-left">Male: On Medication</td><td id="t10_v6">0</td><td id="t10_p6">0%</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- PUT YOUR GOOGLE SHEET ID HERE ---
+        const SHEET_ID = '1VRSnkmJRKU6SFnQ8i_oEFH2dNj5id8Q-TgdppsW1f6M'; 
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+        // Helper function for percentages
+        const calcPercent = (part, whole) => whole > 0 ? ((part / whole) * 100).toFixed(1) + '%' : '0%';
+
+        async function generateReport() {
+            const rollNumber = document.getElementById('searchInput').value.trim();
+            const statusMsg = document.getElementById('statusMsg');
+            const reportCont = document.getElementById('reportContainer');
+            const printBtn = document.getElementById('printBtn');
+
+            if(!rollNumber) return;
+            printBtn.innerText = "Loading Data...";
+
+            try {
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const jsonData = JSON.parse(jsonString);
+                
+                const allRows = jsonData.table.rows;
+                const studentRows = allRows.filter(row => row.c[2] && row.c[2].v.toString() === rollNumber);
+
+                if(studentRows.length === 0) {
+                    statusMsg.innerText = "Student Roll Number not found in database.";
+                    statusMsg.classList.remove('hidden');
+                    reportCont.classList.add('hidden');
+                    printBtn.classList.add('hidden');
+                    printBtn.innerText = "Save as PDF";
+                    return;
+                }
+
+                statusMsg.classList.add('hidden');
+                
+                // 1. Header Info
+                document.getElementById('r_name').innerText = studentRows[0].c[1].v;
+                document.getElementById('r_roll').innerText = studentRows[0].c[2].v;
+                document.getElementById('r_area').innerText = studentRows[0].c[3].v;
+                document.getElementById('r_date').innerText = new Date().toLocaleDateString();
+
+                // 2. Data Arrays
+                let totalPop = 0;
+                let famTypes = {"Nuclear":0, "Joint":0, "Three generation":0};
+                let sesTypes = {"Upper class":0, "Upper middle class":0, "Middle class":0, "Lower middle class":0, "Lower class":0};
+                
+                let males = [0,0,0,0,0,0]; let females = [0,0,0,0,0,0];
+                let ncd = [0,0,0,0,0,0]; let rbs = [0,0,0,0,0,0]; let bp = [0,0,0,0,0,0];
+                let mal = [0,0,0,0,0]; let anthro = [0,0,0,0,0,0]; let anemia = [0,0,0,0,0];
+
+                // 3. Process Rows
+                studentRows.forEach(row => {
+                    const cells = row.c;
+                    const getVal = (idx) => (cells[idx] && cells[idx].v) ? Number(cells[idx].v) : 0;
+                    
+                    if(cells[5] && cells[5].v) famTypes[cells[5].v] = (famTypes[cells[5].v] || 0) + 1;
+                    if(cells[6] && cells[6].v) sesTypes[cells[6].v] = (sesTypes[cells[6].v] || 0) + 1;
+
+                    // Demographics (Cols 7-18)
+                    let col = 7;
+                    for(let i=0; i<6; i++) {
+                        males[i] += getVal(col); females[i] += getVal(col+1);
+                        totalPop += getVal(col) + getVal(col+1);
+                        col += 2;
+                    }
+                    
+                    // Arrays (Cols 19-52)
+                    for(let i=0; i<6; i++) { ncd[i] += getVal(19+i); }
+                    for(let i=0; i<6; i++) { rbs[i] += getVal(25+i); }
+                    for(let i=0; i<6; i++) { bp[i] += getVal(31+i); }
+                    for(let i=0; i<5; i++) { mal[i] += getVal(37+i); }
+                    for(let i=0; i<6; i++) { anthro[i] += getVal(42+i); }
+                    for(let i=0; i<5; i++) { anemia[i] += getVal(48+i); }
+                });
+
+                // Denominators for Percentages
+                const popU5 = males[0] + females[0] + males[1] + females[1];
+                const popAdultF = females[3] + females[4] + females[5];
+                const popAdultM = males[3] + males[4] + males[5];
+                const popTotalAdult = popAdultF + popAdultM;
+                const totalScreenedHTN = ncd[0];
+                const totalScreenedRBS = ncd[3];
+
+                // --- Inject HTML Data ---
+                // Table 1, 2, 3
+                document.getElementById('t1_hh').innerText = studentRows.length;
+                document.getElementById('t1_pop').innerText = totalPop;
+                document.getElementById('t2_nuc').innerText = famTypes["Nuclear"];
+                document.getElementById('t2_jnt').innerText = famTypes["Joint"];
+                document.getElementById('t2_thr').innerText = famTypes["Three generation"];
+                document.getElementById('t3_uc').innerText = sesTypes["Upper class"];
+                document.getElementById('t3_umc').innerText = sesTypes["Upper middle class"];
+                document.getElementById('t3_mc').innerText = sesTypes["Middle class"];
+                document.getElementById('t3_lmc').innerText = sesTypes["Lower middle class"];
+                document.getElementById('t3_lc').innerText = sesTypes["Lower class"];
+
+                // Table 4
+                let totalM_all = 0, totalF_all = 0;
+                for(let i=0; i<6; i++) {
+                    document.getElementById(`t4_m${i+1}`).innerText = males[i];
+                    document.getElementById(`t4_f${i+1}`).innerText = females[i];
+                    document.getElementById(`t4_tot${i+1}`).innerText = males[i] + females[i];
+                    totalM_all += males[i]; totalF_all += females[i];
+                }
+                document.getElementById('t4_m_all').innerText = totalM_all; document.getElementById('t4_f_all').innerText = totalF_all; document.getElementById('t4_all').innerText = totalPop;
+
+                // Table 5
+                document.getElementById('t5_htn_scr').innerText = ncd[0]; document.getElementById('t5_htn_rsd').innerText = ncd[1]; document.getElementById('t5_htn_kno').innerText = ncd[2];
+                document.getElementById('t5_rbs_scr').innerText = ncd[3]; document.getElementById('t5_rbs_rsd').innerText = ncd[4]; document.getElementById('t5_rbs_kno').innerText = ncd[5];
+
+                // Table 6 (Malnutrition - base: U5 Pop)
+                for(let i=0; i<5; i++) {
+                    document.getElementById(`t6_v${i+1}`).innerText = mal[i];
+                    document.getElementById(`t6_p${i+1}`).innerText = calcPercent(mal[i], popU5);
+                }
+
+                // Table 7 (Anthro - base: Adult F / Adult M)
+                document.getElementById('t7_v1').innerText = anthro[0]; document.getElementById('t7_p1').innerText = calcPercent(anthro[0], popAdultF);
+                document.getElementById('t7_v2').innerText = anthro[1]; document.getElementById('t7_p2').innerText = calcPercent(anthro[1], popAdultM);
+                document.getElementById('t7_v3').innerText = anthro[2]; document.getElementById('t7_p3').innerText = calcPercent(anthro[2], popAdultF);
+                document.getElementById('t7_v4').innerText = anthro[3]; document.getElementById('t7_p4').innerText = calcPercent(anthro[3], popAdultM);
+                document.getElementById('t7_v5').innerText = anthro[4]; document.getElementById('t7_p5').innerText = calcPercent(anthro[4], popAdultF);
+                document.getElementById('t7_v6').innerText = anthro[5]; document.getElementById('t7_p6').innerText = calcPercent(anthro[5], popAdultM);
+
+                // Table 8 (Anemia)
+                document.getElementById('t8_v1').innerText = anemia[0]; document.getElementById('t8_p1').innerText = calcPercent(anemia[0], popU5); // Approximating 6-59m with U5 pop
+                document.getElementById('t8_v2').innerText = anemia[1]; document.getElementById('t8_p2').innerText = calcPercent(anemia[1], females[3]); // 15-49 approximated with 15-45
+                document.getElementById('t8_v3').innerText = anemia[2]; document.getElementById('t8_p3').innerText = calcPercent(anemia[2], females[3]);
+                document.getElementById('t8_v4').innerText = anemia[3]; document.getElementById('t8_p4').innerText = calcPercent(anemia[3], females[3]);
+                document.getElementById('t8_v5').innerText = anemia[4]; document.getElementById('t8_p5').innerText = calcPercent(anemia[4], males[3]);
+
+                // Table 9 (RBS - base: Screened for RBS)
+                for(let i=0; i<6; i++) {
+                    document.getElementById(`t9_v${i+1}`).innerText = rbs[i];
+                    document.getElementById(`t9_p${i+1}`).innerText = calcPercent(rbs[i], totalScreenedRBS);
+                }
+
+                // Table 10 (BP - base: Screened for HTN)
+                for(let i=0; i<6; i++) {
+                    document.getElementById(`t10_v${i+1}`).innerText = bp[i];
+                    document.getElementById(`t10_p${i+1}`).innerText = calcPercent(bp[i], totalScreenedHTN);
+                }
+
+                // Show UI
+                reportCont.classList.remove('hidden');
+                printBtn.classList.remove('hidden');
+                printBtn.innerText = "Save as PDF";
+
+            } catch (error) {
+                console.error("Error generating report:", error);
+                statusMsg.innerText = "Connection error. Ensure your Google Sheet is published to the web.";
+                statusMsg.classList.remove('hidden');
+                printBtn.innerText = "Save as PDF";
+            }
+        }
+    </script>
+</body>
+</html>
